@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transit Access Map</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="panel-toggle" id="panelToggle" aria-label="Toggle panel">&#9776;</button>
+  <div class="topbar-title">
+    <span class="topbar-eyebrow">NYC Block-Level Transit Access</span>
+    <h1>Transit Access Map</h1>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="panel" id="panel">
+    <section class="panel-section">
+      <h2>About</h2>
+      <p class="panel-copy">
+        Every Census block is ranked into a percentile relative to every other block citywide.
+        Switch metrics below to compare job access and reachable land area under different
+        service and time-of-day assumptions.
+      </p>
+    </section>
+
+    <section class="panel-section">
+      <h2>Metric</h2>
+      <label class="layer-toggle">
+        <input type="radio" name="layer" value="jobs_full" checked>
+        <span>Jobs Access — Full Service</span>
+      </label>
+      <label class="layer-toggle">
+        <input type="radio" name="layer" value="jobs_limited">
+        <span>Jobs Access — Limited Fare</span>
+      </label>
+      <label class="layer-toggle">
+        <input type="radio" name="layer" value="land_full">
+        <span>Land Area — Full Service</span>
+      </label>
+      <label class="layer-toggle">
+        <input type="radio" name="layer" value="land_full_night">
+        <span>Land Area — Full Service (Nighttime)</span>
+      </label>
+      <label class="layer-toggle">
+        <input type="radio" name="layer" value="land_limited">
+        <span>Land Area — Limited Fare</span>
+      </label>
+    </section>
+
+    <section class="panel-section" id="legend">
+      <h2>Legend</h2>
+      <div class="ramp-bar"></div>
+      <div class="ramp-labels">
+        <span>Minimal Transit</span>
+        <span>Rider's Paradise</span>
+      </div>
+    </section>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map"></div>
+    <div class="map-loading" id="mapLoading">Loading data&hellip;</div>
+  </main>
+
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
