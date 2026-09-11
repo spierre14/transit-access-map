@@ -36,35 +36,18 @@
 
     <section class="panel-section">
       <h2>Metric</h2>
-      <label class="layer-toggle">
-        <input type="radio" name="layer" value="jobs_full" checked>
-        <span>Jobs Access — Full Service</span>
-      </label>
-      <label class="layer-toggle">
-        <input type="radio" name="layer" value="jobs_limited">
-        <span>Jobs Access — Limited Fare</span>
-      </label>
-      <label class="layer-toggle">
-        <input type="radio" name="layer" value="land_full">
-        <span>Land Area — Full Service</span>
-      </label>
-      <label class="layer-toggle">
-        <input type="radio" name="layer" value="land_full_night">
-        <span>Land Area — Full Service (Nighttime)</span>
-      </label>
-      <label class="layer-toggle">
-        <input type="radio" name="layer" value="land_limited">
-        <span>Land Area — Limited Fare</span>
-      </label>
+      <select id="metricSelect" class="metric-select">
+        <option value="jobs_full">Jobs Access — Full Service</option>
+        <option value="jobs_limited">Jobs Access — Limited Fare</option>
+        <option value="land_full">Land Area — Full Service</option>
+        <option value="land_full_night">Land Area — Full Service (Nighttime)</option>
+        <option value="land_limited">Land Area — Limited Fare</option>
+      </select>
     </section>
 
     <section class="panel-section" id="legend">
       <h2>Legend</h2>
-      <div class="ramp-bar"></div>
-      <div class="ramp-labels">
-        <span>Minimal Transit</span>
-        <span>Rider's Paradise</span>
-      </div>
+      <!-- populated by js/app.js based on the selected metric -->
     </section>
   </aside>
 

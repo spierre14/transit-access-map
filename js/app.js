@@ -4,14 +4,14 @@
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3BpZXJyZTE0IiwiYSI6ImNtdHg1MXFyNjAxanUyd3B0Zmppd3pldjMifQ.N_SDvISpQJo1gDuuOetnmQ';
 
 const LAYERS = {
-  jobs_full:        { file: 'data/Jobs_Full_Service.min.geojson' },
-  jobs_limited:      { file: 'data/Jobs_Limited_Fare.min.geojson' },
-  land_full:         { file: 'data/Land_Area_Full_Service.min.geojson' },
-  land_full_night:   { file: 'data/Land_Area_Full_Service_Nighttime.min.geojson' },
-  land_limited:      { file: 'data/Land_Area_Limited_Fare.min.geojson' }
+  jobs_full:        { file: 'data/Jobs_Full_Service.min.geojson', scheme: 'jobs', label: 'Jobs Access — Full Service' },
+  jobs_limited:      { file: 'data/Jobs_Limited_Fare.min.geojson', scheme: 'jobs', label: 'Jobs Access — Limited Fare' },
+  land_full:         { file: 'data/Land_Area_Full_Service.min.geojson', scheme: 'land', label: 'Land Area — Full Service' },
+  land_full_night:   { file: 'data/Land_Area_Full_Service_Nighttime.min.geojson', scheme: 'land', label: 'Land Area — Full Service (Nighttime)' },
+  land_limited:      { file: 'data/Land_Area_Limited_Fare.min.geojson', scheme: 'land', label: 'Land Area — Limited Fare' }
 };
 
-// The 20 percentile bins, low to high — order drives the color ramp
+// The 20 percentile bins, low to high
 const CATEGORY_ORDER = [
   '0–5th percentile', '5th–10th percentile', '10th–15th percentile', '15th–20th percentile',
   '20th–25th percentile', '25th–30th percentile', '30th–35th percentile', '35th–40th percentile',
@@ -20,20 +20,42 @@ const CATEGORY_ORDER = [
   '80th–85th percentile', '85th–90th percentile', '90th–95th percentile', '95th–100th percentile'
 ];
 
-const RAMP_LOW = '#EAF0EE';   // Minimal Transit
-const RAMP_HIGH = '#123B3B';  // Rider's Paradise
+// CartoCSS-matched 20-step colormaps, low percentile -> high percentile
+const COLOR_SCHEMES = {
+  land: [
+    '#fde725', '#dde318', '#bade28', '#95d840', '#75d054',
+    '#56c667', '#3dbc74', '#29af7f', '#20a386', '#1f968b',
+    '#238a8d', '#287d8e', '#2d718e', '#33638d', '#39558c',
+    '#404688', '#453781', '#482576', '#481467', '#440154'
+  ],
+  jobs: [
+    '#f0f921', '#f7e225', '#fccd25', '#feb72d', '#fca338',
+    '#f79044', '#f07f4f', '#e76e5b', '#dd5e66', '#d14e72',
+    '#c5407e', '#b6308b', '#a72197', '#9511a1', '#8305a7',
+    '#6e00a8', '#5901a5', '#43039e', '#2c0594', '#0d0887'
+  ]
+};
 
-// Build a 'match' expression: category string -> rank 0..19, then a continuous
-// interpolation across that rank so the fill reads as one smooth gradient.
-function buildFillColorExpression() {
+function buildFillColorExpression(schemeKey) {
+  const colors = COLOR_SCHEMES[schemeKey];
   const matchPairs = [];
-  CATEGORY_ORDER.forEach((cat, i) => { matchPairs.push(cat, i); });
-  return [
-    'interpolate', ['linear'],
-    ['match', ['get', 'category'], ...matchPairs, 0],
-    0, RAMP_LOW,
-    CATEGORY_ORDER.length - 1, RAMP_HIGH
-  ];
+  CATEGORY_ORDER.forEach((cat, i) => { matchPairs.push(cat, colors[i]); });
+  return ['match', ['get', 'category'], ...matchPairs, '#cccccc'];
+}
+
+function renderLegend(schemeKey) {
+  const colors = COLOR_SCHEMES[schemeKey];
+  const legendEl = document.getElementById('legend');
+  legendEl.innerHTML = `
+    <h2>Legend</h2>
+    <div class="ramp-wrap">
+      <div class="ramp-vertical" style="background: linear-gradient(to top, ${colors.join(', ')});"></div>
+      <div class="ramp-vertical-labels">
+        <span>Rider's Paradise</span>
+        <span>Minimal Transit</span>
+      </div>
+    </div>
+  `;
 }
 
 // ============================================================
@@ -56,60 +78,74 @@ async function loadLayerData(key) {
   if (dataCache[key]) return dataCache[key];
   loadingEl.classList.add('visible');
   const res = await fetch(LAYERS[key].file);
+  if (!res.ok) throw new Error(`Failed to load ${LAYERS[key].file}: ${res.status}`);
   const geojson = await res.json();
   dataCache[key] = geojson;
-  loadingEl.classList.remove('visible');
   return geojson;
 }
 
 async function showLayer(key) {
-  const geojson = await loadLayerData(key);
-  const source = map.getSource('blocks');
-  if (source) {
-    source.setData(geojson);
-  } else {
-    map.addSource('blocks', { type: 'geojson', data: geojson });
-    map.addLayer({
-      id: 'blocks-fill',
-      type: 'fill',
-      source: 'blocks',
-      paint: { 'fill-color': buildFillColorExpression(), 'fill-opacity': 0.8 }
-    });
-    map.addLayer({
-      id: 'blocks-outline',
-      type: 'line',
-      source: 'blocks',
-      paint: { 'line-color': '#ffffff', 'line-width': 0.2 }
-    });
+  try {
+    const geojson = await loadLayerData(key);
+    const scheme = LAYERS[key].scheme;
+    const source = map.getSource('blocks');
 
-    map.on('click', 'blocks-fill', (e) => {
-      const p = e.features[0].properties;
-      const isPct = p.metric_label && p.metric_label.startsWith('%');
-      const value = isPct
-        ? `${Number(p.metric_value).toFixed(1)}%`
-        : Number(p.metric_value).toLocaleString();
+    if (source) {
+      source.setData(geojson);
+      map.setPaintProperty('blocks-fill', 'fill-color', buildFillColorExpression(scheme));
+    } else {
+      map.addSource('blocks', { type: 'geojson', data: geojson });
+      map.addLayer({
+        id: 'blocks-fill',
+        type: 'fill',
+        source: 'blocks',
+        paint: { 'fill-color': buildFillColorExpression(scheme), 'fill-opacity': 0.8 }
+      });
+      map.addLayer({
+        id: 'blocks-outline',
+        type: 'line',
+        source: 'blocks',
+        paint: { 'line-color': '#ffffff', 'line-width': 0.1, 'line-opacity': 0.5 }
+      });
 
-      if (currentPopup) currentPopup.remove();
-      currentPopup = new mapboxgl.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(`<div class="popup-title">Block ${p.blockid20}</div>
-                   <div class="popup-row">${p.metric_label}: ${value}</div>
-                   <div class="popup-row">${p.category}</div>`)
-        .addTo(map);
-    });
+      map.on('click', 'blocks-fill', (e) => {
+        const p = e.features[0].properties;
+        const isPct = p.metric_label && p.metric_label.startsWith('%');
+        const value = isPct
+          ? `${Number(p.metric_value).toFixed(1)}%`
+          : Number(p.metric_value).toLocaleString();
 
-    map.on('mouseenter', 'blocks-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'blocks-fill', () => { map.getCanvas().style.cursor = ''; });
+        if (currentPopup) currentPopup.remove();
+        currentPopup = new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<div class="popup-title">Block ${p.blockid20}</div>
+                     <div class="popup-row">${p.metric_label}: ${value}</div>
+                     <div class="popup-row">${p.category}</div>`)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'blocks-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'blocks-fill', () => { map.getCanvas().style.cursor = ''; });
+    }
+
+    renderLegend(scheme);
+  } catch (err) {
+    console.error(err);
+    loadingEl.textContent = 'Could not load this layer — check the console for details.';
+    loadingEl.classList.add('visible');
+    return;
+  } finally {
+    loadingEl.classList.remove('visible');
   }
 }
 
 map.on('load', () => { showLayer('jobs_full'); });
 
 // ============================================================
-// Layer switcher
+// Metric dropdown
 // ============================================================
-document.querySelectorAll('input[name="layer"]').forEach((radio) => {
-  radio.addEventListener('change', (e) => { showLayer(e.target.value); });
+document.getElementById('metricSelect').addEventListener('change', (e) => {
+  showLayer(e.target.value);
 });
 
 // ============================================================
