@@ -4,11 +4,11 @@
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3BpZXJyZTE0IiwiYSI6ImNtdHg1MXFyNjAxanUyd3B0Zmppd3pldjMifQ.N_SDvISpQJo1gDuuOetnmQ';
 
 const LAYERS = {
-  jobs_full:        { file: 'data/Jobs_Full_Service.min.geojson', scheme: 'jobs', label: 'Jobs Access — Full Service' },
-  jobs_limited:      { file: 'data/Jobs_Limited_Fare.min.geojson', scheme: 'jobs', label: 'Jobs Access — Limited Fare' },
-  land_full:         { file: 'data/Land_Area_Full_Service.min.geojson', scheme: 'land', label: 'Land Area — Full Service' },
-  land_full_night:   { file: 'data/Land_Area_Full_Service_Nighttime.min.geojson', scheme: 'land', label: 'Land Area — Full Service (Nighttime)' },
-  land_limited:      { file: 'data/Land_Area_Limited_Fare.min.geojson', scheme: 'land', label: 'Land Area — Limited Fare' }
+  jobs_full:        { file: 'data/Jobs_Full_Service.min.geojson', scheme: 'jobs' },
+  jobs_limited:      { file: 'data/Jobs_Limited_Fare.min.geojson', scheme: 'jobs' },
+  land_full:         { file: 'data/Land_Area_Full_Service.min.geojson', scheme: 'land' },
+  land_full_night:   { file: 'data/Land_Area_Full_Service_Nighttime.min.geojson', scheme: 'land' },
+  land_limited:      { file: 'data/Land_Area_Limited_Fare.min.geojson', scheme: 'land' }
 };
 
 // The 20 percentile bins, low to high
@@ -47,13 +47,10 @@ function renderLegend(schemeKey) {
   const colors = COLOR_SCHEMES[schemeKey];
   const legendEl = document.getElementById('legend');
   legendEl.innerHTML = `
-    <h2>Legend</h2>
-    <div class="ramp-wrap">
-      <div class="ramp-vertical" style="background: linear-gradient(to top, ${colors.join(', ')});"></div>
-      <div class="ramp-vertical-labels">
-        <span>Rider's Paradise</span>
-        <span>Minimal Transit</span>
-      </div>
+    <div class="ramp-horizontal" style="background: linear-gradient(to right, ${colors.join(', ')});"></div>
+    <div class="ramp-horizontal-labels">
+      <span>Lower Access</span>
+      <span>Higher Access</span>
     </div>
   `;
 }
@@ -68,7 +65,7 @@ const map = new mapboxgl.Map({
   zoom: 10
 });
 
-map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
 
 const dataCache = {};
 const loadingEl = document.getElementById('mapLoading');
@@ -149,7 +146,7 @@ document.getElementById('metricSelect').addEventListener('change', (e) => {
 });
 
 // ============================================================
-// Mobile panel drawer
+// Floating panel toggle (mobile)
 // ============================================================
 document.getElementById('panelToggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('open');
