@@ -14,49 +14,32 @@
 </head>
 <body>
 
-<header class="topbar">
-  <button class="panel-toggle" id="panelToggle" aria-label="Toggle panel">&#9776;</button>
-  <div class="topbar-title">
-    <span class="topbar-eyebrow">NYC Block-Level Transit Access</span>
+<main class="map-wrap">
+  <div id="map"></div>
+  <div class="map-loading" id="mapLoading">Loading data&hellip;</div>
+
+  <button class="panel-toggle-float" id="panelToggle" aria-label="Toggle panel">&#9776;</button>
+
+  <aside class="floating-panel" id="panel">
     <h1>Transit Access Map</h1>
-  </div>
-</header>
 
-<div class="layout">
+    <select id="metricSelect" class="metric-select">
+      <optgroup label="Jobs Access">
+        <option value="jobs_full">Full Service</option>
+        <option value="jobs_limited">Limited Fare</option>
+      </optgroup>
+      <optgroup label="Land Area Access">
+        <option value="land_full">Full Service</option>
+        <option value="land_full_night">Full Service (Nighttime)</option>
+        <option value="land_limited">Limited Fare</option>
+      </optgroup>
+    </select>
 
-  <aside class="panel" id="panel">
-    <section class="panel-section">
-      <h2>About</h2>
-      <p class="panel-copy">
-        Every Census block is ranked into a percentile relative to every other block citywide.
-        Switch metrics below to compare job access and reachable land area under different
-        service and time-of-day assumptions.
-      </p>
-    </section>
-
-    <section class="panel-section">
-      <h2>Metric</h2>
-      <select id="metricSelect" class="metric-select">
-        <option value="jobs_full">Jobs Access — Full Service</option>
-        <option value="jobs_limited">Jobs Access — Limited Fare</option>
-        <option value="land_full">Land Area — Full Service</option>
-        <option value="land_full_night">Land Area — Full Service (Nighttime)</option>
-        <option value="land_limited">Land Area — Limited Fare</option>
-      </select>
-    </section>
-
-    <section class="panel-section" id="legend">
-      <h2>Legend</h2>
+    <div id="legend">
       <!-- populated by js/app.js based on the selected metric -->
-    </section>
+    </div>
   </aside>
-
-  <main class="map-wrap">
-    <div id="map"></div>
-    <div class="map-loading" id="mapLoading">Loading data&hellip;</div>
-  </main>
-
-</div>
+</main>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
 <script src="js/app.js"></script>
